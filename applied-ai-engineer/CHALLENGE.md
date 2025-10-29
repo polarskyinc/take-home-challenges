@@ -70,10 +70,9 @@ Create a `README.md` file that includes:
 1. **Approach (2-4 sentences)**. Briefly describe your ranking strategy and implementation approach.
 2. **Key Prompts Used**. Copy-paste the most important prompts you used with your AI assistant. Show your iteration if relevant!
 3. **Reflections**. What worked well with the AI assistant? What was challenging or required multiple attempts? Any surprises about coding in Go with AI help?
-4. **User Engagement**. Add to your `README.md` file your thoughts on one additional feature/capability that would increas user engagement.
+4. **User Engagement**. Add to your `README.md` file your thoughts on one additional feature/capability that would increase user engagement.
 5. **Instructions on how to run your application**
 6. **Stretch Goal**. Brief note on whether you implemented it, and any interesting decisions or prompts involved.
-7. **Stretch-Stretch Goal**. If you had extra time, let us know what additional features you would add to the project. Let your creative side out!
 
 ## Submission
 
