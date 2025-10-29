@@ -4,7 +4,7 @@ This challenge is designed to see how effectively you collaborate with AI coding
 
 # The Scenario
 
-You're building a **Movie Quote Search Engine** for a mental wellness app. Users describe a situation or feeling, and your tool helps find the most relevant movie quotes when they're going through difficult moments. Your tool needs to understand the emotional intent behind messy, real-world queries and surface quotes that genuinely resonate, not just keyword matches.
+You're building a **Movie Quote Search Engine** for a mental wellness app. Users describe a situation or feeling, and your tool helps find the most relevant movie quotes when they're going through difficult moments. Your tool needs to understand the emotional intent behind messy, real-world queries and surface quotes that genuinely resonate, not just keyword matches. The product manager views this feature as strong potential for increasing user engagement with app.
 
 # Your Mission
 
@@ -45,6 +45,10 @@ Top 3 quotes for: "I need motivation to keep going when things are tough"
 
 *Note: Your scores may vary depending on your ranking approach!*
 
+## User Engagement
+
+Now that you've implemented it, what is an additional feature or capability you would add that would help further the business goal of increasing user engagement? How would it work?
+
 ## Stretch Goal (Nice-to-Have)
 
 **Support custom queries via command line**: Allow users to override the query in the JSON file by passing a custom query as a CLI argument.
@@ -66,9 +70,9 @@ Create a `README.md` file that includes:
 1. **Approach (2-4 sentences)**. Briefly describe your ranking strategy and implementation approach.
 2. **Key Prompts Used**. Copy-paste the most important prompts you used with your AI assistant. Show your iteration if relevant!
 3. **Reflections**. What worked well with the AI assistant? What was challenging or required multiple attempts? Any surprises about coding in Go with AI help?
-4. **Instructions on how to run your application**
-5. **Stretch Goal**. Brief note on whether you implemented it, and any interesting decisions or prompts involved.
-6. **Stretch-Stretch Goal**. If you had extra time, let us know what additional features you would add to the project. Let your creative side out!
+4. **User Engagement**. Add to your `README.md` file your thoughts on one additional feature/capability that would increase user engagement.
+5. **Instructions on how to run your application**
+6. **Stretch Goal**. Brief note on whether you implemented it, and any interesting decisions or prompts involved.
 
 ## Submission
 
