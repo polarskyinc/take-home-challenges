@@ -1,3 +1,4 @@
 # Polar Sky Take-Home challenges
 
-- [Applied AI Engineer Challenge](applied-ai-engineer/CHALLENGE.md)
+- [Engineer Challenge](engineer/CHALLENGE.md)
+- [Founding AI Engineer Prompt](founding-ai-engineer/PROMPT.md)
