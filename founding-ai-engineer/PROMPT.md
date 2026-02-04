@@ -3,8 +3,6 @@
 ## High-level problem
 Polar Sky analyzes document permissions and produces remediation recommendations -- concrete actions like removing a user's access, downgrading a group from editor to viewer, or restricting an organization-wide sharing link. These recommendations are surfaced to reviewers (typically the file owner or, for shared drives, the organizers) through Teams or Slack notifications. Reviewers see a list of impacted principals: the specific users and groups whose access would change if the recommendation is applied. For each principal, the reviewer makes a binary decision -- apply the recommendation (proceed with the access change) or retain access (override the AI and keep current permissions). Every decision is captured as structured feedback tied to the original recommendation snapshot, enabling us to measure recommendation quality, identify patterns in overrides, and improve future classifications.
 
-Reviewers (typically the file owner/organizer) see the impacted principals and decide whether to **apply the recommendation** or **retain access**.
-
 Design an **offline evaluation system** that uses **real-world human feedback captured during normal product usage** to:
 - catch regressions over time, and
 - enable offline experimentation (try different models/prompts/planner variants and see whether they improve outcomes).
