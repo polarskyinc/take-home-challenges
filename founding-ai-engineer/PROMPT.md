@@ -1,7 +1,9 @@
 # Polar Sky — Offline Eval + Human Feedback Loop (Interview Homework)
 
 ## High-level problem
-Polar Sky produces document-permission remediation recommendations (e.g., remove/downgrade access, tighten link sharing). Reviewers (typically the file owner/organizer) see the impacted principals and decide whether to **apply the recommendation** or **retain access**.
+Polar Sky analyzes document permissions and produces remediation recommendations -- concrete actions like removing a user's access, downgrading a group from editor to viewer, or restricting an organization-wide sharing link. These recommendations are surfaced to reviewers (typically the file owner or, for shared drives, the organizers) through Teams or Slack notifications. Reviewers see a list of impacted principals: the specific users and groups whose access would change if the recommendation is applied. For each principal, the reviewer makes a binary decision -- apply the recommendation (proceed with the access change) or retain access (override the AI and keep current permissions). Every decision is captured as structured feedback tied to the original recommendation snapshot, enabling us to measure recommendation quality, identify patterns in overrides, and improve future classifications.
+
+Reviewers (typically the file owner/organizer) see the impacted principals and decide whether to **apply the recommendation** or **retain access**.
 
 Design an **offline evaluation system** that uses **real-world human feedback captured during normal product usage** to:
 - catch regressions over time, and
@@ -36,8 +38,7 @@ Submit:
 - **Reproducible**: every eval result is attributable to:
   - the evaluated system versions (`model_version`, `planner_version`)
   - the eval runner version (you define how)
-  - a pinned cohort definition (time window, tenant inclusion, filters)
-- **Multi-tenant safe**: never mix tenants; joins/queries must be tenant-safe by construction.
+  - a pinned cohort definition (time window, inclusion/exclusion rules, filters)
 - **Practical**: assume this runs on a schedule (e.g., daily) and produces trendable metrics.
 
 ### What the eval system should do
@@ -75,6 +76,30 @@ Your spec should define:
 ## Context: data model (self-contained)
 All IDs are UUIDs unless noted otherwise. PostgreSQL is used for persistence.
 
+### Data model diagram (ASCII, simplified)
+```
+document_permission_assessments
+  id, assessed_at, workflow_version, integration_id, semantic_envelope_id, source_file_id
+            |
+            v
+assessed_permissions
+  assessment_id, principal, classification, permission_level, inheritance_depth, reason, created_at
+
+semantic_envelopes
+  id, created_at, summary_text, summary_topics, sensitivity_score, sensitivity_reasons
+            ^
+            |
+authz_recommendation_events
+  id, tenant_id, integration_id, model_version, planner_version, created_at,
+  document_permission_assessment_id, semantic_envelope_id,
+  trusted_principals, recommended_actions, impacted_principals
+            |
+            v
+authz_recommendation_feedback
+  id, tenant_id, integration_id, recommendation_id, responder_user_id,
+  principal_id, principal_type, decision, selected_action_id, grant_paths, comment, created_at
+```
+
 ### System overview
 At a high level, the system behaves like:
 1) Build a snapshot of effective access to a document (who can access it and why).
@@ -93,18 +118,83 @@ At a high level, the system behaves like:
 The eval system you design should use the persisted snapshots + human decisions to measure how often recommendations match human judgment, and to compare outcomes across versions/slices and candidate changes.
 
 ### Tables and key fields (minimal)
+```
++------------------------------+            +---------------------+
+| document_permission_         |            | semantic_envelopes  |
+| assessments                  |            |---------------------|
+|------------------------------|            | id                  |
+| id                           |            | created_at          |
+| assessed_at                  |            | summary_text        |
+| workflow_version             |            | summary_topics      |
+| integration_id               |            | sensitivity_score   |
+| semantic_envelope_id         |<-----------| sensitivity_reasons |
+| source_file_id               |            +---------------------+
++------------------------------+
+              |
+              | assessment_id
+              v
++------------------------------+
+| assessed_permissions         |
+|------------------------------|
+| assessment_id                |
+| principal                    |
+| classification               |
+| permission_level             |
+| inheritance_depth            |
+| reason                       |
+| created_at                   |
++------------------------------+
+
++------------------------------+
+| authz_recommendation_events  |
+|------------------------------|
+| id                           |
+| tenant_id                    |
+| integration_id               |
+| model_version                |
+| planner_version              |
+| created_at                   |
+| document_permission_         |
+|   _assessment_id             |
+| semantic_envelope_id         |
+| trusted_principals           |
+| recommended_actions          |
+| impacted_principals          |
++------------------------------+
+              |
+              | recommendation_id
+              v
++------------------------------+
+| authz_recommendation_        |
+| feedback                     |
+|------------------------------|
+| id                           |
+| tenant_id                    |
+| integration_id               |
+| recommendation_id            |
+| responder_user_id            |
+| principal_id                 |
+| principal_type               |
+| decision                     |
+| selected_action_id           |
+| grant_paths                  |
+| comment                      |
+| created_at                   |
++------------------------------+
+```
+
 You can assume the following logical tables exist, with the listed fields being the ones that matter for this exercise.
 
 #### `authz_recommendation_events` (immutable recommendation snapshot)
 One row per recommendation snapshot emitted by the system (“what the system recommended at time T”).
-- Keys and partitioning: `id`, `polar_sky_organization_id` (tenant), `integration_id` (provider tenant/domain)
+- Keys and partitioning: `id`, `tenant_id`, `integration_id`
 - Versioning: `model_version`, `planner_version`, `created_at`
-- Join anchors: `document_permission_assessment_id`, `semantic_document_id`, `semantic_envelope_id`
-- Snapshot payloads (JSON): `access_graph_digest`, `trusted_principals`, `recommended_actions`, `impacted_principals`, `planner_stats`
+- Join anchors: `document_permission_assessment_id`, `semantic_envelope_id`
+- Snapshot payloads (JSON): `trusted_principals`, `recommended_actions`, `impacted_principals`
 
 #### `authz_recommendation_feedback` (append-only human decisions)
 One row per reviewer decision about one principal within one recommendation snapshot. Append-only; reviewers can change their mind.
-- Keys and join: `id`, `polar_sky_organization_id`, `integration_id`, `recommendation_id` → `authz_recommendation_events.id`
+- Keys and join: `id`, `tenant_id`, `integration_id`, `recommendation_id` → `authz_recommendation_events.id`
 - Who decided: `responder_user_id`
 - What the decision is about: `principal_id` (string), `principal_type` (`user` | `group`)
 - The decision: `decision` (`apply_recommendation` | `retain_access`), `selected_action_id` (UUID; set when applying)
